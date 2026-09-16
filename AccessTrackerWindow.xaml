@@ -1,0 +1,70 @@
+<Window x:Class="MemSearch.AccessTrackerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MemSearch"
+        mc:Ignorable="d"
+        Title="Access Tracking" Height="560" Width="900"
+        WindowStartupLocation="CenterOwner"
+        Closing="Window_Closing">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock x:Name="HeaderText" Grid.Row="0" Margin="0,0,0,8" TextWrapping="Wrap" />
+
+        <DataGrid x:Name="HitsGrid" Grid.Row="1"
+                  AutoGenerateColumns="False"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  IsReadOnly="True"
+                  HeadersVisibility="Column"
+                  GridLinesVisibility="Horizontal"
+                  SelectionMode="Single"
+                  RowHeaderWidth="0"
+                  MouseDoubleClick="HitsGrid_MouseDoubleClick">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Address" Width="150" Binding="{Binding AddressText}" />
+                <DataGridTextColumn Header="Eff. address" Width="150" Binding="{Binding EffectiveAddressText}" />
+                <DataGridTextColumn Header="Access" Width="90" Binding="{Binding KindText}" />
+                <DataGridTextColumn Header="Thread" Width="80" Binding="{Binding ThreadId}" />
+                <DataGridTextColumn Header="Hits" Width="60" Binding="{Binding Count}" />
+                <DataGridTextColumn Header="Instruction" Width="*" Binding="{Binding Disassembly}" />
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <Expander x:Name="DiagnosticsExpander" Grid.Row="2" Header="Diagnostics"
+                  Margin="0,8,0,0" IsExpanded="False">
+            <DockPanel Margin="0,6,0,0">
+                <StackPanel DockPanel.Dock="Right" Orientation="Vertical" Margin="6,0,0,0">
+                    <Button Content="Copy" Width="70" Padding="0,4" Click="CopyLog_Click" />
+                    <Button Content="Save..." Width="70" Padding="0,4" Margin="0,4,0,0" Click="SaveLog_Click" />
+                </StackPanel>
+                <TextBox x:Name="DiagnosticsBox" Height="150"
+                         IsReadOnly="True"
+                         TextWrapping="NoWrap"
+                         AcceptsReturn="True"
+                         FontFamily="Consolas"
+                         FontSize="11"
+                         VerticalScrollBarVisibility="Auto"
+                         HorizontalScrollBarVisibility="Auto" />
+            </DockPanel>
+        </Expander>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+            <TextBlock Text="Watch size:" VerticalAlignment="Center" Margin="0,0,6,0" />
+            <ComboBox x:Name="WatchSizeCombo" Width="64" VerticalAlignment="Center" Margin="0,0,16,0" />
+            <TextBlock Text="Auto-stop after" VerticalAlignment="Center" Margin="0,0,6,0" />
+            <TextBox x:Name="AutoStopBox" Width="44" VerticalAlignment="Center" TextAlignment="Right" />
+            <TextBlock Text="writers" VerticalAlignment="Center" Margin="6,0,12,0" />
+            <Button x:Name="StopButton" Content="Stop Tracking" Padding="12,4" Click="StopButton_Click" />
+            <Button x:Name="ClearButton" Content="Clear" Padding="12,4" Margin="8,0,0,0" Click="ClearButton_Click" />
+            <Button Content="Close" Width="90" Padding="0,4" Margin="8,0,0,0" Click="CloseButton_Click" />
+        </StackPanel>
+    </Grid>
+</Window>

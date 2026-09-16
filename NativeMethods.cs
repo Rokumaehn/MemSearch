@@ -3,7 +3,7 @@ using System.Text;
 
 namespace MemSearch;
 
-internal static class NativeMethods
+internal static partial class NativeMethods
 {
     // Process access rights.
     public const uint PROCESS_QUERY_INFORMATION = 0x0400;

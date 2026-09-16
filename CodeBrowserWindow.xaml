@@ -1,0 +1,60 @@
+<Window x:Class="MemSearch.CodeBrowserWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MemSearch"
+        mc:Ignorable="d"
+        Title="Code Browser" Height="580" Width="920"
+        WindowStartupLocation="CenterOwner">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+            <TextBlock Text="Address:" VerticalAlignment="Center" Margin="0,0,6,0" />
+            <TextBox x:Name="GoAddressBox" Width="160" VerticalAlignment="Center" KeyDown="GoAddressBox_KeyDown" />
+            <Button Content="Go" Padding="12,4" Margin="6,0,0,0" Click="GoButton_Click" />
+            <Button Content="Back" Padding="12,4" Margin="12,0,0,0" Click="BackButton_Click" />
+            <Button Content="Follow" Padding="12,4" Margin="6,0,0,0" Click="FollowButton_Click" />
+            <Button Content="Refresh" Padding="12,4" Margin="6,0,0,0" Click="RefreshButton_Click" />
+        </StackPanel>
+
+        <DataGrid x:Name="CodeGrid" Grid.Row="1"
+                  AutoGenerateColumns="False"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  CanUserResizeRows="False"
+                  HeadersVisibility="Column"
+                  GridLinesVisibility="Horizontal"
+                  SelectionMode="Single"
+                  RowHeaderWidth="0"
+                  CellEditEnding="CodeGrid_CellEditEnding"
+                  PreparingCellForEdit="CodeGrid_PreparingCellForEdit">
+            <DataGrid.RowStyle>
+                <Style TargetType="DataGridRow">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsHighlighted}" Value="True">
+                            <Setter Property="Background" Value="#FFF3B0" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding IsCurrent}" Value="True">
+                            <Setter Property="Background" Value="#CFE8FF" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </DataGrid.RowStyle>
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Address" Width="150" IsReadOnly="True" Binding="{Binding Address}" />
+                <DataGridTextColumn Header="Bytes" Width="230" IsReadOnly="True" Binding="{Binding Bytes}" />
+                <DataGridTextColumn x:Name="InstructionColumn" Header="Instruction (editable)"
+                                    Width="*" Binding="{Binding Text}" />
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <TextBlock x:Name="StatusText" Grid.Row="2" Margin="0,8,0,0" TextWrapping="Wrap"
+                   Text="Double-click a cell in the Instruction column to edit the assembly." />
+    </Grid>
+</Window>

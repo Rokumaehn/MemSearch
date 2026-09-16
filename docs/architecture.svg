@@ -1,0 +1,222 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1240" viewBox="0 0 1600 1240" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="a" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#57606a"/>
+    </marker>
+    <marker id="ar" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#b62324"/>
+    </marker>
+    <style>
+      .panel { fill:#ffffff; stroke:#d0d7de; stroke-width:1.5; }
+      .ptitle { font-size:15px; font-weight:700; fill:#1f2328; }
+      .band { font-size:12px; font-weight:600; fill:#57606a; }
+      .b { stroke-width:1.5; }
+      .ui { fill:#ddf4ff; stroke:#1f6feb; }
+      .scan { fill:#dafbe1; stroke:#2ea043; }
+      .track { fill:#fff8c5; stroke:#d29922; }
+      .dis { fill:#fbefff; stroke:#8957e5; }
+      .plat { fill:#f6f8fa; stroke:#6e7781; }
+      .tgt { fill:#ffebe9; stroke:#b62324; }
+      .t { font-size:13px; fill:#1f2328; text-anchor:middle; }
+      .tm { font-size:12px; fill:#1f2328; text-anchor:middle; font-family:Consolas, monospace; }
+      .ts { font-size:11px; fill:#1f2328; text-anchor:middle; }
+      .tl { font-size:11px; fill:#1f2328; }
+      .note { font-size:11px; fill:#b62324; }
+      .n2 { font-size:11px; fill:#57606a; }
+      .al { stroke:#57606a; stroke-width:1.4; fill:none; marker-end:url(#a); }
+      .alr { stroke:#b62324; stroke-width:1.4; fill:none; marker-end:url(#ar); stroke-dasharray:5 4; }
+      .ad { stroke:#57606a; stroke-width:1.4; fill:none; marker-end:url(#a); stroke-dasharray:5 4; }
+      .lab { font-size:10px; fill:#57606a; }
+      .sw { stroke-width:1.2; }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1600" height="1240" fill="#ffffff"/>
+  <text x="40" y="38" font-size="22" font-weight="700" fill="#1f2328">MemSearch — architecture &amp; data flow</text>
+
+  <!-- Legend -->
+  <g>
+    <rect x="900" y="14" width="14" height="14" class="sw ui"/>
+    <text x="920" y="25" class="tl">UI</text>
+    <rect x="990" y="14" width="14" height="14" class="sw scan"/>
+    <text x="1010" y="25" class="tl">Scanning</text>
+    <rect x="1110" y="14" width="14" height="14" class="sw track"/>
+    <text x="1130" y="25" class="tl">Access tracking</text>
+    <rect x="1270" y="14" width="14" height="14" class="sw dis"/>
+    <text x="1290" y="25" class="tl">Disassembly / assembler</text>
+    <rect x="1470" y="14" width="14" height="14" class="sw tgt"/>
+    <text x="1490" y="25" class="tl">Target</text>
+    <text x="900" y="50" class="n2">solid = direct reference    dashed = P/Invoke / cross-process</text>
+  </g>
+
+  <!-- ================= PANEL A ================= -->
+  <rect x="30" y="60" width="1540" height="500" rx="12" class="panel"/>
+  <text x="50" y="88" class="ptitle">A · Components and layers</text>
+
+  <text x="50" y="124" class="band">UI (WPF, elevated, app.manifest)</text>
+  <rect x="50" y="132" width="230" height="40" rx="8" class="b ui"/>
+  <text x="165" y="157" class="tm">MainWindow</text>
+  <rect x="300" y="132" width="230" height="40" rx="8" class="b ui"/>
+  <text x="415" y="157" class="tm">ProcessPickerWindow</text>
+  <rect x="550" y="132" width="230" height="40" rx="8" class="b ui"/>
+  <text x="665" y="157" class="tm">AccessTrackerWindow</text>
+  <rect x="800" y="132" width="230" height="40" rx="8" class="b ui"/>
+  <text x="915" y="157" class="tm">CodeBrowserWindow</text>
+
+  <text x="50" y="202" class="band">Scanning</text>
+  <rect x="50" y="210" width="230" height="40" rx="8" class="b scan"/>
+  <text x="165" y="235" class="tm">MemoryScanner</text>
+  <rect x="300" y="210" width="230" height="40" rx="8" class="b scan"/>
+  <text x="415" y="235" class="tm">MemoryValueTypeInfo</text>
+  <rect x="550" y="210" width="230" height="40" rx="8" class="b scan"/>
+  <text x="665" y="235" class="tm">ResultRow</text>
+
+  <text x="50" y="282" class="band">Access tracking (IAccessTracker)</text>
+  <rect x="50" y="290" width="200" height="46" rx="8" class="b track"/>
+  <text x="150" y="317" class="tm">IAccessTracker · AccessHit</text>
+  <rect x="270" y="290" width="240" height="46" rx="8" class="b track"/>
+  <text x="390" y="317" class="tm">HardwareBreakpointTracker</text>
+  <rect x="530" y="290" width="240" height="46" rx="8" class="b track"/>
+  <text x="650" y="317" class="tm">InProcessBreakpointTracker</text>
+  <rect x="790" y="290" width="180" height="46" rx="8" class="b track"/>
+  <text x="880" y="317" class="tm">ShellcodeAgent</text>
+  <rect x="990" y="290" width="220" height="46" rx="8" class="b track"/>
+  <text x="1100" y="317" class="tm">External* / Decoy* probes</text>
+
+  <text x="50" y="364" class="band">Disassembly / assembler</text>
+  <rect x="50" y="372" width="240" height="40" rx="8" class="b dis"/>
+  <text x="170" y="397" class="tm">DisassemblyService (Iced)</text>
+  <rect x="310" y="372" width="240" height="40" rx="8" class="b dis"/>
+  <text x="430" y="397" class="tm">AssemblerService (Iced)</text>
+
+  <text x="50" y="446" class="band">Platform / interop</text>
+  <rect x="50" y="454" width="200" height="42" rx="8" class="b plat"/>
+  <text x="150" y="480" class="tm">ProcessMemory</text>
+  <rect x="270" y="454" width="150" height="42" rx="8" class="b plat"/>
+  <text x="345" y="480" class="tm">Privileges</text>
+  <rect x="440" y="454" width="200" height="42" rx="8" class="b plat"/>
+  <text x="540" y="480" class="tm">NativeMethods.*</text>
+  <rect x="660" y="454" width="140" height="42" rx="8" class="b plat"/>
+  <text x="730" y="480" class="tm">Iced (NuGet)</text>
+  <rect x="1150" y="454" width="360" height="42" rx="8" class="b tgt"/>
+  <text x="1330" y="480" class="tm">Target process / Windows APIs</text>
+
+  <!-- Panel A arrows -->
+  <path d="M165,172 L165,208" class="al"/>
+  <path d="M665,172 L650,288" class="al"/>
+  <path d="M620,172 L400,288" class="al"/>
+  <text x="470" y="220" class="lab">options / actions</text>
+  <path d="M770,313 L788,313" class="al"/>
+  <path d="M165,250 L150,452" class="al"/>
+  <path d="M390,336 L210,452" class="al"/>
+  <path d="M880,336 L560,452" class="al"/>
+  <path d="M170,412 L150,452" class="al"/>
+  <path d="M430,412 L200,452" class="al"/>
+  <path d="M650,336 L170,352 L170,372" class="al"/>
+  <text x="300" y="349" class="lab">decode</text>
+  <path d="M250,475 L1148,475" class="ad"/>
+  <text x="560" y="470" class="lab">ReadProcessMemory / WriteProcessMemory / VirtualQueryEx</text>
+  <path d="M540,496 L1330,496" class="ad"/>
+  <text x="820" y="491" class="lab">P/Invoke (kernel32, user32, ntdll, psapi, advapi32)</text>
+
+  <!-- ================= PANEL B ================= -->
+  <rect x="30" y="580" width="750" height="640" rx="12" class="panel"/>
+  <text x="50" y="608" class="ptitle">B · Scan &amp; edit flow</text>
+
+  <rect x="180" y="630" width="440" height="44" rx="8" class="b ui"/>
+  <text x="400" y="657" class="t">1 · Open Process (MainWindow)</text>
+  <rect x="180" y="694" width="440" height="44" rx="8" class="b ui"/>
+  <text x="400" y="721" class="t">2 · ProcessPickerWindow (visible-window filter)</text>
+  <rect x="180" y="758" width="440" height="44" rx="8" class="b plat"/>
+  <text x="400" y="785" class="tm">3 · ProcessMemory.Open (OpenProcess + SeDebugPrivilege)</text>
+  <rect x="180" y="822" width="440" height="62" rx="8" class="b scan"/>
+  <text x="400" y="846" class="t">4 · MemoryScanner.FirstScan</text>
+  <text x="400" y="866" class="ts">VirtualQueryEx committed regions → ReadProcessMemory → typed compare</text>
+  <rect x="180" y="904" width="440" height="44" rx="8" class="b scan"/>
+  <text x="400" y="931" class="t">5 · Candidates (list of addresses)</text>
+  <rect x="180" y="968" width="440" height="44" rx="8" class="b scan"/>
+  <text x="400" y="995" class="t">6 · NextScan — re-read candidates, keep matches</text>
+  <rect x="180" y="1032" width="440" height="44" rx="8" class="b ui"/>
+  <text x="400" y="1059" class="t">7 · ≤ 100 → Results DataGrid (Address | Value)</text>
+  <rect x="180" y="1096" width="440" height="44" rx="8" class="b ui"/>
+  <text x="400" y="1123" class="t">8 · Edit ResultRow.Value → WriteBytes → target</text>
+
+  <path d="M400,674 L400,692" class="al"/>
+  <path d="M400,738 L400,756" class="al"/>
+  <path d="M400,802 L400,820" class="al"/>
+  <path d="M400,884 L400,902" class="al"/>
+  <path d="M400,948 L400,966" class="al"/>
+  <path d="M400,1012 L400,1030" class="al"/>
+  <path d="M400,1076 L400,1094" class="al"/>
+  <text x="60" y="1160" class="n2">Only committed, readable regions are scanned. Reset Search clears candidates and re-enables the datatype.</text>
+
+  <!-- ================= PANEL C ================= -->
+  <rect x="800" y="580" width="770" height="360" rx="12" class="panel"/>
+  <text x="820" y="608" class="ptitle">C · Access tracking</text>
+
+  <rect x="1000" y="620" width="380" height="40" rx="8" class="b ui"/>
+  <text x="1190" y="645" class="t">Results context menu → AccessTrackerWindow (Access watch)</text>
+
+  <text x="820" y="684" class="band">Debugger-based (DR / page-guard)</text>
+  <rect x="820" y="692" width="330" height="34" rx="7" class="b track"/>
+  <text x="985" y="714" class="tm">HardwareBreakpointTracker.Start</text>
+  <rect x="820" y="732" width="330" height="34" rx="7" class="b plat"/>
+  <text x="985" y="754" class="tm">DebugActiveProcess</text>
+  <rect x="820" y="772" width="330" height="34" rx="7" class="b plat"/>
+  <text x="985" y="794" class="tm">WaitForDebugEvent loop</text>
+  <rect x="820" y="812" width="330" height="34" rx="7" class="b track"/>
+  <text x="985" y="834" class="tm">arm DR0/DR7 or PAGE_GUARD</text>
+  <rect x="820" y="852" width="330" height="34" rx="7" class="b track"/>
+  <text x="985" y="874" class="tm">single-step / guard event</text>
+  <rect x="820" y="892" width="330" height="34" rx="7" class="b dis"/>
+  <text x="985" y="914" class="tm">DisassemblyService.Decode → AccessHit</text>
+  <text x="820" y="948" class="note">Missed if the thread uses ThreadHideFromDebugger.</text>
+
+  <text x="1200" y="684" class="band">In-process VEH (no debugger)</text>
+  <rect x="1200" y="692" width="350" height="34" rx="7" class="b track"/>
+  <text x="1375" y="714" class="tm">InProcessBreakpointTracker.Start</text>
+  <rect x="1200" y="732" width="350" height="34" rx="7" class="b plat"/>
+  <text x="1375" y="754" class="tm">resolve kernel32 / ntdll exports</text>
+  <rect x="1200" y="772" width="350" height="34" rx="7" class="b track"/>
+  <text x="1375" y="794" class="tm">VirtualAllocEx · ShellcodeAgent.Build ·</text>
+  <text x="1375" y="807" class="tm">WriteProcessMemory · CreateRemoteThread (VEH)</text>
+  <rect x="1200" y="812" width="350" height="34" rx="7" class="b track"/>
+  <text x="1375" y="834" class="tm">arm DR0 on all threads</text>
+  <rect x="1200" y="852" width="350" height="34" rx="7" class="b tgt"/>
+  <text x="1375" y="874" class="tm">target VEH → {tid, rip} ring buffer</text>
+  <rect x="1200" y="892" width="350" height="34" rx="7" class="b dis"/>
+  <text x="1375" y="914" class="tm">poll ReadProcessMemory → Decode → AccessHit</text>
+  <text x="1200" y="948" class="n2">Teardown: RemoveVectoredExceptionHandler + VirtualFreeEx.</text>
+
+  <rect x="1000" y="958" width="380" height="38" rx="8" class="b ui"/>
+  <text x="1190" y="981" class="t">AccessTrackerWindow: hits grid + Diagnostics pane</text>
+
+  <!-- ================= PANEL D ================= -->
+  <rect x="800" y="960" width="770" height="250" rx="12" class="panel"/>
+  <text x="820" y="988" class="ptitle">D · Code browser &amp; assembly edit</text>
+
+  <rect x="900" y="1000" width="170" height="40" rx="8" class="b ui"/>
+  <text x="985" y="1025" class="tm">CodeBrowserWindow</text>
+  <rect x="1120" y="1000" width="170" height="40" rx="8" class="b dis"/>
+  <text x="1205" y="1025" class="tm">DisassemblyService</text>
+  <rect x="1340" y="1000" width="170" height="40" rx="8" class="b dis"/>
+  <text x="1425" y="1025" class="tm">AssemblerService</text>
+
+  <rect x="1000" y="1060" width="240" height="48" rx="8" class="b dis"/>
+  <text x="1120" y="1081" class="t">fits → NOP-pad</text>
+  <text x="1120" y="1097" class="ts">same length or shorter</text>
+  <rect x="1280" y="1060" width="300" height="48" rx="8" class="b dis"/>
+  <text x="1430" y="1081" class="t">longer → code cave + trampoline</text>
+  <text x="1430" y="1097" class="ts">VirtualAllocEx + BlockEncoder relocate + jmp</text>
+
+  <rect x="1080" y="1130" width="300" height="42" rx="8" class="b plat"/>
+  <text x="1230" y="1156" class="tm">ProcessMemory.WriteCode (+ FlushInstructionCache)</text>
+
+  <path d="M1070,1020 L1118,1020" class="al"/>
+  <path d="M1290,1020 L1338,1020" class="al"/>
+  <path d="M1425,1040 L1120,1058" class="al"/>
+  <path d="M1425,1040 L1430,1058" class="al"/>
+  <path d="M1120,1108 L1190,1128" class="al"/>
+  <path d="M1430,1108 L1290,1128" class="al"/>
+  <text x="1230" y="1000" class="lab" text-anchor="middle">edit the selected instruction</text>
+</svg>

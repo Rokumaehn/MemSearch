@@ -37,6 +37,9 @@
 
             <ProgressBar x:Name="ScanProgress" Width="130" Height="16" Margin="14,0,0,0"
                          IsIndeterminate="True" Visibility="Collapsed" />
+
+            <TextBlock Text="Access watch:" VerticalAlignment="Center" Margin="16,0,6,0" />
+            <ComboBox x:Name="MechanismCombo" Width="240" VerticalAlignment="Center" />
         </StackPanel>
 
         <TextBlock x:Name="StatusText" Grid.Row="2" Margin="0,0,0,8"
@@ -50,7 +53,27 @@
                   HeadersVisibility="Column"
                   GridLinesVisibility="Horizontal"
                   SelectionMode="Single"
-                  RowHeaderWidth="0">
+                  RowHeaderWidth="0"
+                  PreviewMouseRightButtonDown="ResultsGrid_PreviewMouseRightButtonDown">
+            <DataGrid.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Browse memory here" Click="BrowseMemory_Click" />
+                    <Separator />
+                    <MenuItem Header="Find out what writes to this address" Click="FindWrites_Click" />
+                    <MenuItem Header="Find out what accesses this address" Click="FindAccesses_Click" />
+                    <MenuItem Header="Find out what executes this address" Click="FindExecutes_Click" />
+                    <Separator />
+                    <MenuItem Header="Diagnostics">
+                        <MenuItem Header="Attach only (no breakpoints)" Click="ProbeAttachOnly_Click" />
+                        <MenuItem Header="External hardware breakpoint (no debugger)" Click="ProbeExternalDr_Click" />
+                        <MenuItem Header="External page-guard (no debugger)" Click="ProbeExternalGuard_Click" />
+                        <Separator />
+                        <MenuItem Header="Decoy baseline (allocated page)" Click="ProbeDecoyBaseline_Click" />
+                        <MenuItem Header="Decoy page-guard (allocated page)" Click="ProbeDecoyGuard_Click" />
+                        <MenuItem Header="Decoy hardware breakpoint (allocated page)" Click="ProbeDecoyDr_Click" />
+                    </MenuItem>
+                </ContextMenu>
+            </DataGrid.ContextMenu>
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Address" Width="200" IsReadOnly="True"
                                     Binding="{Binding Address}" />

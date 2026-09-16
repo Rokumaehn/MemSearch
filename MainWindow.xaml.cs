@@ -1,7 +1,9 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace MemSearch;
 
@@ -14,6 +16,8 @@ public partial class MainWindow : Window
 
     private ProcessMemory? _memory;
     private MemoryScanner? _scanner;
+    private DisassemblyService? _disassembly;
+    private AssemblerService? _assembler;
     private CancellationTokenSource? _cts;
     private bool _typeLocked;
     private bool _isScanning;
@@ -28,6 +32,15 @@ public partial class MainWindow : Window
         TypeCombo.DisplayMemberPath = nameof(ValueTypeOption.DisplayName);
         TypeCombo.SelectedValuePath = nameof(ValueTypeOption.Type);
         TypeCombo.SelectedValue = MemoryValueType.DWord;
+
+        MechanismCombo.ItemsSource = new[]
+        {
+            new MechanismOption(AccessMechanism.HardwareBreakpoints, "Hardware breakpoints (debugger)"),
+            new MechanismOption(AccessMechanism.GuardPage, "Page-guard (debugger)"),
+            new MechanismOption(AccessMechanism.InProcessVeh, "In-process VEH (no debugger)")
+        };
+        MechanismCombo.DisplayMemberPath = nameof(MechanismOption.Name);
+        MechanismCombo.SelectedIndex = 2;
     }
 
     private void OpenProcessButton_Click(object sender, RoutedEventArgs e)
@@ -43,6 +56,11 @@ public partial class MainWindow : Window
         {
             _memory?.Dispose();
             _memory = ProcessMemory.Open(item.Id, item.Name);
+
+            int bitness = _memory.Is64BitProcess ? 64 : 32;
+            _disassembly = new DisassemblyService(bitness);
+            _assembler = new AssemblerService(_memory, _disassembly, bitness);
+
             ProcessLabel.Text = $"{item.Name} (PID {item.Id})";
             ResetSearch();
         }
@@ -216,5 +234,113 @@ public partial class MainWindow : Window
     {
         _cts?.Cancel();
         _memory?.Dispose();
+    }
+
+    private void ResultsGrid_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        DependencyObject? source = e.OriginalSource as DependencyObject;
+        while (source is not null and not DataGridRow)
+            source = VisualTreeHelper.GetParent(source);
+
+        if (source is DataGridRow row)
+            row.IsSelected = true;
+    }
+
+    private ResultRow? GetSelectedRow()
+    {
+        if (ResultsGrid.SelectedItem is ResultRow row)
+            return row;
+
+        MessageBox.Show(this, "Select an address in the results list first.", "MemSearch",
+            MessageBoxButton.OK, MessageBoxImage.Information);
+        return null;
+    }
+
+    private void BrowseMemory_Click(object sender, RoutedEventArgs e)
+    {
+        if (_memory is null || _disassembly is null || _assembler is null)
+            return;
+
+        ResultRow? row = GetSelectedRow();
+        if (row is null)
+            return;
+
+        var browser = new CodeBrowserWindow(_memory, _disassembly, _assembler, row.AddressValue, row.AddressValue)
+        {
+            Owner = this
+        };
+        browser.Show();
+    }
+
+    private void FindWrites_Click(object sender, RoutedEventArgs e) => TrackAccess(AccessKind.Write);
+
+    private void FindAccesses_Click(object sender, RoutedEventArgs e) => TrackAccess(AccessKind.ReadWrite);
+
+    private void FindExecutes_Click(object sender, RoutedEventArgs e) => TrackAccess(AccessKind.Execute);
+
+    private void TrackAccess(AccessKind mode)
+    {
+        if (_memory is null || _disassembly is null || _assembler is null)
+            return;
+
+        if (!_memory.Is64BitProcess)
+        {
+            MessageBox.Show(this, "Access tracking is only supported for 64-bit target processes.",
+                "MemSearch", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        ResultRow? row = GetSelectedRow();
+        if (row is null)
+            return;
+
+        int size = _scanner is not null ? MemoryValueTypeInfo.SizeOf(_scanner.ValueType) : 4;
+        AccessMechanism mechanism = MechanismCombo.SelectedItem is MechanismOption option
+            ? option.Type
+            : AccessMechanism.HardwareBreakpoints;
+
+        var window = new AccessTrackerWindow(_memory, _disassembly, _assembler, row.AddressValue, mode, size,
+            mechanism: mechanism)
+        {
+            Owner = this
+        };
+        window.Show();
+    }
+
+    private void ProbeAttachOnly_Click(object sender, RoutedEventArgs e) => RunProbe(ProbeMode.AttachOnly);
+
+    private void ProbeExternalDr_Click(object sender, RoutedEventArgs e) => RunProbe(ProbeMode.ExternalDr);
+
+    private void ProbeExternalGuard_Click(object sender, RoutedEventArgs e) => RunProbe(ProbeMode.ExternalGuard);
+
+    private void ProbeDecoyBaseline_Click(object sender, RoutedEventArgs e) => RunProbe(ProbeMode.DecoyBaseline);
+
+    private void ProbeDecoyGuard_Click(object sender, RoutedEventArgs e) => RunProbe(ProbeMode.DecoyGuard);
+
+    private void ProbeDecoyDr_Click(object sender, RoutedEventArgs e) => RunProbe(ProbeMode.DecoyDr);
+
+    private static bool IsDecoy(ProbeMode probeMode) =>
+        probeMode is ProbeMode.DecoyBaseline or ProbeMode.DecoyGuard or ProbeMode.DecoyDr;
+
+    private void RunProbe(ProbeMode probeMode)
+    {
+        if (_memory is null || _disassembly is null || _assembler is null)
+            return;
+
+        ulong address = 0;
+        if (!IsDecoy(probeMode))
+        {
+            ResultRow? row = GetSelectedRow();
+            if (row is null)
+                return;
+            address = row.AddressValue;
+        }
+
+        int size = _scanner is not null ? MemoryValueTypeInfo.SizeOf(_scanner.ValueType) : 4;
+        var window = new AccessTrackerWindow(_memory, _disassembly, _assembler, address, AccessKind.Write, size, probeMode)
+        {
+            Owner = this
+        };
+        window.Show();
     }
 }
