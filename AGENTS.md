@@ -39,6 +39,10 @@ dotnet build -o "$env:TEMP\memsearch-verify"
 - The injected data-breakpoint handler sets/uses `DR0` and is registered with
   `AddVectoredExceptionHandler`; `Stop()` must remove the handler
   (`RemoveVectoredExceptionHandler`) and free its allocations.
+- The **Codes** tab is backed by `CodeEntry.cs` / `CodeManager.cs`. `CodeManager`
+  applies script entries with `AssemblerService.Apply` and reverts them using the
+  `EditResult` original bytes plus the code-cave address; the main window drives it
+  from a `DispatcherTimer` and each entry's `PropertyChanged`.
 
 ## Conventions
 

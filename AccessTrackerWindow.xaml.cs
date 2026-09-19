@@ -2,7 +2,9 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
 using Microsoft.Win32;
 
@@ -20,6 +22,7 @@ public partial class AccessTrackerWindow : Window
     private readonly int _size;
     private readonly ProbeMode _probeMode;
     private readonly AccessMechanism _mechanism;
+    private readonly Action<ulong, string>? _registerScript;
     private readonly ObservableCollection<AccessHit> _items = new();
 
     private IAccessTracker? _tracker;
@@ -27,7 +30,8 @@ public partial class AccessTrackerWindow : Window
 
     internal AccessTrackerWindow(ProcessMemory memory, DisassemblyService disassembly, AssemblerService assembler,
         ulong address, AccessKind mode, int size, ProbeMode probeMode = ProbeMode.Normal,
-        AccessMechanism mechanism = AccessMechanism.HardwareBreakpoints)
+        AccessMechanism mechanism = AccessMechanism.HardwareBreakpoints,
+        Action<ulong, string>? registerScript = null)
     {
         InitializeComponent();
 
@@ -39,6 +43,7 @@ public partial class AccessTrackerWindow : Window
         _size = size;
         _probeMode = probeMode;
         _mechanism = mechanism;
+        _registerScript = registerScript;
 
         HitsGrid.ItemsSource = _items;
 
@@ -232,6 +237,28 @@ public partial class AccessTrackerWindow : Window
             Owner = this
         };
         browser.Show();
+    }
+
+    private void HitsGrid_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        DependencyObject? source = e.OriginalSource as DependencyObject;
+        while (source is not null and not DataGridRow)
+            source = VisualTreeHelper.GetParent(source);
+
+        if (source is DataGridRow row)
+            row.IsSelected = true;
+    }
+
+    private void RegisterHit_Click(object sender, RoutedEventArgs e)
+    {
+        if (HitsGrid.SelectedItem is not AccessHit hit)
+        {
+            MessageBox.Show(this, "Select an instruction first.", "Register",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        _registerScript?.Invoke(hit.InstructionAddress, hit.Disassembly);
     }
 
     private void StopButton_Click(object sender, RoutedEventArgs e) => StopTracking();

@@ -12,7 +12,8 @@ internal enum EditMode
     CodeCave
 }
 
-internal sealed record EditResult(bool Success, EditMode Mode, string Message, ulong CaveAddress);
+internal sealed record EditResult(bool Success, EditMode Mode, string Message, ulong CaveAddress,
+    ulong PatchAddress = 0, int PatchLength = 0, byte[]? OriginalBytes = null);
 
 internal sealed class AssemblerService
 {
@@ -59,11 +60,13 @@ internal sealed class AssemblerService
             inPlace.Length <= originalLength)
         {
             byte[] padded = PadWithNops(inPlace, originalLength);
+            byte[]? original = _memory.ReadBytes(address, originalLength);
             if (!_memory.WriteCode(address, padded))
                 return new EditResult(false, EditMode.None, "Failed to write to process memory.", 0);
 
             return new EditResult(true, EditMode.InPlace,
-                $"Wrote {inPlace.Length} byte(s) in place ({originalLength - inPlace.Length} NOP filler).", 0);
+                $"Wrote {inPlace.Length} byte(s) in place ({originalLength - inPlace.Length} NOP filler).", 0,
+                address, originalLength, original);
         }
 
         return BuildTrampoline(address, parsed, decoded, originalLength);
@@ -90,6 +93,7 @@ internal sealed class AssemblerService
 
         ulong backTarget = address + (ulong)total;
         int relocatedLength = total - displaced[0].Length;
+        byte[]? original = _memory.ReadBytes(address, total);
 
         if (!TryBuild(parsed, 0, out Instruction userInstruction, out string buildError))
             return new EditResult(false, EditMode.None, buildError, 0);
@@ -135,7 +139,8 @@ internal sealed class AssemblerService
                 throw new InvalidOperationException("Failed to patch the original code.");
 
             return new EditResult(true, EditMode.CodeCave,
-                $"New code placed in a cave at 0x{caveAddress:X} with a jump trampoline.", caveAddress);
+                $"New code placed in a cave at 0x{caveAddress:X} with a jump trampoline.", caveAddress,
+                address, total, original);
         }
         catch (Exception ex)
         {

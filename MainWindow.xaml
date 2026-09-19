@@ -5,17 +5,49 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MemSearch"
         mc:Ignorable="d"
-        Title="MemSearch" Height="540" Width="840"
+        Title="MemSearch" Height="560" Width="840"
         Closing="Window_Closing">
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <DockPanel Grid.Row="0" Margin="0,0,0,10">
+        <Menu Grid.Row="0" Margin="0,0,0,8" Background="Transparent">
+            <MenuItem Header="_File" Background="Transparent">
+                <MenuItem Header="Open Process..." Click="OpenProcessMenuItem_Click" />
+                <Separator />
+                <MenuItem Header="Exit" Click="ExitMenuItem_Click" />
+            </MenuItem>
+            <MenuItem Header="_Options">
+                <MenuItem Header="Access type">
+                    <MenuItem x:Name="AccessTypeHw" Header="Hardware breakpoints (debugger)"
+                              IsCheckable="True" Click="AccessType_Click" />
+                    <MenuItem x:Name="AccessTypeGuard" Header="Page-guard (debugger)"
+                              IsCheckable="True" Click="AccessType_Click" />
+                    <MenuItem x:Name="AccessTypeVeh" Header="In-process VEH (no debugger)"
+                              IsCheckable="True" Click="AccessType_Click" />
+                </MenuItem>
+            </MenuItem>
+            <MenuItem Header="_Windows">
+                <MenuItem Header="Code browser..." Click="CodeBrowserMenuItem_Click" />
+            </MenuItem>
+            <MenuItem Header="_Diagnostics">
+                <MenuItem Header="Attach only (no breakpoints)" Click="ProbeAttachOnly_Click" />
+                <Separator />
+                <MenuItem Header="External hardware breakpoint (no debugger)" Click="ProbeExternalDr_Click" />
+                <MenuItem Header="External page-guard (no debugger)" Click="ProbeExternalGuard_Click" />
+                <Separator />
+                <MenuItem Header="Decoy baseline (allocated page)" Click="ProbeDecoyBaseline_Click" />
+                <MenuItem Header="Decoy page-guard (allocated page)" Click="ProbeDecoyGuard_Click" />
+                <MenuItem Header="Decoy hardware breakpoint (allocated page)" Click="ProbeDecoyDr_Click" />
+            </MenuItem>
+        </Menu>
+
+        <DockPanel Grid.Row="1" Margin="0,0,0,10">
             <Button x:Name="OpenProcessButton" DockPanel.Dock="Left"
                     Content="Open Process..." Padding="12,4" Click="OpenProcessButton_Click" />
             <Button x:Name="ResetButton" DockPanel.Dock="Right"
@@ -24,7 +56,7 @@
                        VerticalAlignment="Center" Text="No process opened." />
         </DockPanel>
 
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8">
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,8">
             <TextBlock Text="Type:" VerticalAlignment="Center" Margin="0,0,6,0" />
             <ComboBox x:Name="TypeCombo" Width="190" VerticalAlignment="Center" />
 
@@ -37,49 +69,111 @@
 
             <ProgressBar x:Name="ScanProgress" Width="130" Height="16" Margin="14,0,0,0"
                          IsIndeterminate="True" Visibility="Collapsed" />
-
-            <TextBlock Text="Access watch:" VerticalAlignment="Center" Margin="16,0,6,0" />
-            <ComboBox x:Name="MechanismCombo" Width="240" VerticalAlignment="Center" />
         </StackPanel>
 
-        <TextBlock x:Name="StatusText" Grid.Row="2" Margin="0,0,0,8"
+        <TextBlock x:Name="StatusText" Grid.Row="3" Margin="0,0,0,8"
                    TextWrapping="Wrap" Text="Open a process to begin." />
 
-        <DataGrid x:Name="ResultsGrid" Grid.Row="3"
-                  AutoGenerateColumns="False"
-                  CanUserAddRows="False"
-                  CanUserDeleteRows="False"
-                  CanUserResizeRows="False"
-                  HeadersVisibility="Column"
-                  GridLinesVisibility="Horizontal"
-                  SelectionMode="Single"
-                  RowHeaderWidth="0"
-                  PreviewMouseRightButtonDown="ResultsGrid_PreviewMouseRightButtonDown">
-            <DataGrid.ContextMenu>
-                <ContextMenu>
-                    <MenuItem Header="Browse memory here" Click="BrowseMemory_Click" />
-                    <Separator />
-                    <MenuItem Header="Find out what writes to this address" Click="FindWrites_Click" />
-                    <MenuItem Header="Find out what accesses this address" Click="FindAccesses_Click" />
-                    <MenuItem Header="Find out what executes this address" Click="FindExecutes_Click" />
-                    <Separator />
-                    <MenuItem Header="Diagnostics">
-                        <MenuItem Header="Attach only (no breakpoints)" Click="ProbeAttachOnly_Click" />
-                        <MenuItem Header="External hardware breakpoint (no debugger)" Click="ProbeExternalDr_Click" />
-                        <MenuItem Header="External page-guard (no debugger)" Click="ProbeExternalGuard_Click" />
-                        <Separator />
-                        <MenuItem Header="Decoy baseline (allocated page)" Click="ProbeDecoyBaseline_Click" />
-                        <MenuItem Header="Decoy page-guard (allocated page)" Click="ProbeDecoyGuard_Click" />
-                        <MenuItem Header="Decoy hardware breakpoint (allocated page)" Click="ProbeDecoyDr_Click" />
-                    </MenuItem>
-                </ContextMenu>
-            </DataGrid.ContextMenu>
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Address" Width="200" IsReadOnly="True"
-                                    Binding="{Binding Address}" />
-                <DataGridTextColumn Header="Value" Width="*"
-                                    Binding="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
-            </DataGrid.Columns>
-        </DataGrid>
+        <TabControl Grid.Row="4">
+            <TabItem Header="Results">
+                <DataGrid x:Name="ResultsGrid"
+                          AutoGenerateColumns="False"
+                          CanUserAddRows="False"
+                          CanUserDeleteRows="False"
+                          CanUserResizeRows="False"
+                          HeadersVisibility="Column"
+                          GridLinesVisibility="Horizontal"
+                          SelectionMode="Single"
+                          RowHeaderWidth="0"
+                          PreviewMouseRightButtonDown="ResultsGrid_PreviewMouseRightButtonDown">
+                    <DataGrid.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="Register" Click="RegisterResult_Click" />
+                            <Separator />
+                            <MenuItem Header="Browse memory here" Click="BrowseMemory_Click" />
+                            <Separator />
+                            <MenuItem Header="Find out what writes to this address" Click="FindWrites_Click" />
+                            <MenuItem Header="Find out what accesses this address" Click="FindAccesses_Click" />
+                            <MenuItem Header="Find out what executes this address" Click="FindExecutes_Click" />
+                        </ContextMenu>
+                    </DataGrid.ContextMenu>
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Address" Width="200" IsReadOnly="True"
+                                            Binding="{Binding Address}" />
+                        <DataGridTextColumn Header="Value" Width="*"
+                                            Binding="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+
+            <TabItem x:Name="CodesTab" Header="Codes">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+                        <TextBlock Text="Freeze interval (ms):" VerticalAlignment="Center" Margin="0,0,6,0" />
+                        <TextBox x:Name="IntervalBox" Width="70" Text="500" VerticalAlignment="Center"
+                                 TextAlignment="Right" TextChanged="IntervalBox_TextChanged" />
+                        <Button x:Name="RemoveCodeButton" Content="Remove" Padding="12,4" Margin="12,0,0,0"
+                                Click="RemoveCodeButton_Click" />
+                    </StackPanel>
+
+                    <DataGrid x:Name="CodesGrid" Grid.Row="1"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              CanUserDeleteRows="False"
+                              CanUserResizeRows="False"
+                              HeadersVisibility="Column"
+                              GridLinesVisibility="Horizontal"
+                              SelectionMode="Single"
+                              RowHeaderWidth="0"
+                              BeginningEdit="CodesGrid_BeginningEdit"
+                              MouseDoubleClick="CodesGrid_MouseDoubleClick"
+                              PreviewKeyDown="CodesGrid_PreviewKeyDown"
+                              PreviewMouseRightButtonDown="CodesGrid_PreviewMouseRightButtonDown">
+                        <DataGrid.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Edit script..." Click="EditScript_Click" />
+                                <Separator />
+                                <MenuItem Header="Remove" Click="RemoveCodeButton_Click" />
+                            </ContextMenu>
+                        </DataGrid.ContextMenu>
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="Enabled" Width="70">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTextColumn Header="Description" Width="200"
+                                                Binding="{Binding Description, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+
+                            <DataGridTemplateColumn Header="Datatype" Width="190">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ComboBox ItemsSource="{Binding DataTypeOptions}"
+                                                  DisplayMemberPath="DisplayName"
+                                                  SelectedValuePath="Type"
+                                                  SelectedValue="{Binding DataType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTextColumn Header="Address" Width="160"
+                                                Binding="{Binding Address, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+
+                            <DataGridTextColumn x:Name="CodeValueColumn" Header="Value" Width="*"
+                                                Binding="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+        </TabControl>
     </Grid>
 </Window>

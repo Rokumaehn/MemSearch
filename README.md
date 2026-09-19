@@ -71,8 +71,8 @@ the policy is turned off. Use an unmanaged machine/VM if you cannot change it.
 
 ### Access tracking
 
-Right-click an address in the results list. Pick a mechanism in the **Access watch**
-dropdown:
+Right-click an address in the results list. Pick a mechanism under
+**Options → Access type**:
 
 | Mechanism | How it works | When to use |
 |---|---|---|
@@ -92,7 +92,30 @@ in a list; double-click a hit to open it in the code browser.
 The tracker list can **auto-stop** after a given number of distinct writers (set the
 number in the bottom row).
 
+### Codes (freeze list / scripts)
+
+The lower half of the window is tabbed: **Results** holds the search hits, **Codes**
+holds persistent entries that are re-applied while enabled.
+
+- Right-click a result → **Register** adds a data entry (`Enabled`, `Description`,
+  `Datatype`, `Address`, `Value`).
+- Right-click an instruction in an access-tracking window → **Register** adds a
+  **Script** entry whose default is that instruction.
+- Tick **Enabled** on a data entry to overwrite the address with the value every
+  *Freeze interval* (editable, default 500 ms).
+- A **Script** entry's `Value` always shows `<asm>`; double-click it (or right-click →
+  *Edit script...*) to edit the assembly. Enabling injects it exactly like the code
+  browser (in place with NOP padding, or a code cave + jump trampoline); disabling
+  writes the original bytes back and frees the cave.
+- Only one entry may be active per address.
+- **Remove** (button, right-click, or Delete) drops an entry and restores an applied
+  script. Closing the app leaves applied scripts in place.
+
 ### Code browser
+
+Open it from **Windows → Code browser** (or right-click an address → *Browse memory
+here*). It opens at the selected result or the target's main module base; use the
+**Go** box to jump to any hex/decimal address.
 
 - Shows address, raw bytes, and disassembly (Masm syntax).
 - **Go** to an address, **Back**, **Follow** a branch/call, **Refresh**.
@@ -105,8 +128,8 @@ number in the bottom row).
 
 ### Diagnostics
 
-Every tracking window has a **Diagnostics** expander (Copy / Save). The results
-context menu also has a **Diagnostics** submenu with probes used during development:
+Every tracking window has a **Diagnostics** expander (Copy / Save). The **Diagnostics**
+menu has probes used during development:
 attach-only, external hardware breakpoint (no debugger), external page-guard, and
 three "decoy" probes (allocate/guard/DR an untouched page) to test whether a target
 detects these techniques.

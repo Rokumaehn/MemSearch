@@ -27,7 +27,13 @@
                   GridLinesVisibility="Horizontal"
                   SelectionMode="Single"
                   RowHeaderWidth="0"
-                  MouseDoubleClick="HitsGrid_MouseDoubleClick">
+                  MouseDoubleClick="HitsGrid_MouseDoubleClick"
+                  PreviewMouseRightButtonDown="HitsGrid_PreviewMouseRightButtonDown">
+            <DataGrid.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Register" Click="RegisterHit_Click" />
+                </ContextMenu>
+            </DataGrid.ContextMenu>
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Address" Width="150" Binding="{Binding AddressText}" />
                 <DataGridTextColumn Header="Eff. address" Width="150" Binding="{Binding EffectiveAddressText}" />
