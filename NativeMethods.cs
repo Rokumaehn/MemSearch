@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace MemSearch;
+namespace OmniHax;
 
 internal static partial class NativeMethods
 {
@@ -16,6 +16,8 @@ internal static partial class NativeMethods
 
     // Page protections.
     public const uint PAGE_NOACCESS = 0x01;
+    public const uint PAGE_WRITECOPY = 0x08;
+    public const uint PAGE_EXECUTE_WRITECOPY = 0x80;
     public const uint PAGE_GUARD = 0x100;
 
     [StructLayout(LayoutKind.Sequential)]

@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 
-namespace MemSearch;
+namespace OmniHax;
 
 /// <summary>
 /// Diagnostic probe that sets a hardware breakpoint from outside the target without
@@ -76,7 +76,7 @@ internal sealed class ExternalBreakpointProbe : IAccessTracker, IDisposable
         _monitor = new Thread(Monitor)
         {
             IsBackground = true,
-            Name = "MemSearch.ExternalProbe"
+            Name = "OmniHax.ExternalProbe"
         };
         _monitor.Start();
     }

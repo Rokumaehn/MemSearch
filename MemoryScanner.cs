@@ -1,4 +1,4 @@
-namespace MemSearch;
+namespace OmniHax;
 
 internal sealed record ScanProgress(long RegionsDone, long RegionsTotal, long BytesScanned, long Found);
 
@@ -12,16 +12,20 @@ internal sealed class MemoryScanner
     private const int ChunkSize = 1024 * 1024;
 
     private readonly ProcessMemory _memory;
+    private readonly bool _writableOnly;
+    private readonly bool _aligned;
     private readonly List<ulong> _candidates = new();
 
     public MemoryValueType ValueType { get; }
     public bool HasScanned { get; private set; }
     public IReadOnlyList<ulong> Candidates => _candidates;
 
-    public MemoryScanner(ProcessMemory memory, MemoryValueType valueType)
+    public MemoryScanner(ProcessMemory memory, MemoryValueType valueType, bool writableOnly, bool aligned)
     {
         _memory = memory;
         ValueType = valueType;
+        _writableOnly = writableOnly;
+        _aligned = aligned;
     }
 
     public void Reset()
@@ -51,7 +55,7 @@ internal sealed class MemoryScanner
     private List<ulong> FirstScan(byte[] pattern, IProgress<ScanProgress>? progress, CancellationToken token)
     {
         var results = new List<ulong>();
-        List<MemoryRegion> regions = _memory.EnumerateRegions();
+        List<MemoryRegion> regions = _memory.EnumerateRegions(_writableOnly);
         var buffer = new byte[ChunkSize + 8];
         int size = pattern.Length;
         long bytesScanned = 0;
@@ -74,7 +78,8 @@ internal sealed class MemoryScanner
                     break;
 
                 int scanCount = Math.Min(primary, read);
-                CollectMatches(buffer.AsSpan(0, read), scanCount, pattern, region.Base + position, results);
+                CollectMatches(buffer.AsSpan(0, read), scanCount, pattern, region.Base + position, results,
+                    _aligned ? size : 1);
                 bytesScanned += primary;
                 position += unchecked((ulong)primary);
             }
@@ -117,7 +122,8 @@ internal sealed class MemoryScanner
         int scanCount,
         byte[] pattern,
         ulong baseAddress,
-        List<ulong> results)
+        List<ulong> results,
+        int align)
     {
         int size = pattern.Length;
         if (scanCount < size)
@@ -138,7 +144,10 @@ internal sealed class MemoryScanner
             if (matchPosition > maxStart)
                 break;
 
-            results.Add(baseAddress + unchecked((ulong)matchPosition));
+            ulong address = baseAddress + unchecked((ulong)matchPosition);
+            if (align <= 1 || address % (ulong)align == 0)
+                results.Add(address);
+
             start = matchPosition + 1;
         }
     }

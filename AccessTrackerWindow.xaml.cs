@@ -8,7 +8,7 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using Microsoft.Win32;
 
-namespace MemSearch;
+namespace OmniHax;
 
 public partial class AccessTrackerWindow : Window
 {
@@ -211,7 +211,7 @@ public partial class AccessTrackerWindow : Window
         {
             Title = "Save diagnostics",
             Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*",
-            FileName = $"memsearch-access-{_memory.ProcessId}.txt"
+            FileName = $"omnihax-access-{_memory.ProcessId}.txt"
         };
 
         if (dialog.ShowDialog(this) != true)

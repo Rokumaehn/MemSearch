@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Iced.Intel;
 
-namespace MemSearch;
+namespace OmniHax;
 
 internal enum AccessKind
 {
@@ -209,7 +209,7 @@ internal sealed class HardwareBreakpointTracker : IAccessTracker, IDisposable
         _thread = new Thread(() => DebugLoop(ready))
         {
             IsBackground = true,
-            Name = "MemSearch.Debugger"
+            Name = "OmniHax.Debugger"
         };
         _thread.Start();
 

@@ -2,7 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
-namespace MemSearch;
+namespace OmniHax;
 
 public partial class ProcessPickerWindow : Window
 {

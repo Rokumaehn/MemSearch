@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Globalization;
 
-namespace MemSearch;
+namespace OmniHax;
 
 public enum CodeDataType
 {

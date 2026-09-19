@@ -1,6 +1,6 @@
 using Iced.Intel;
 
-namespace MemSearch;
+namespace OmniHax;
 
 internal sealed record DisassembledInstruction(ulong Address, byte[] Bytes, string Text, Instruction Instruction)
 {

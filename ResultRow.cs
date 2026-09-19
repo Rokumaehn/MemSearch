@@ -1,6 +1,6 @@
 using System.ComponentModel;
 
-namespace MemSearch;
+namespace OmniHax;
 
 /// <summary>
 /// One scanned address shown in the result grid. Assigning <see cref="Value"/>

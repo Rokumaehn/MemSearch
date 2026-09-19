@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Text;
 
-namespace MemSearch;
+namespace OmniHax;
 
 internal sealed class ProcessItem
 {

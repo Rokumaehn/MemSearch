@@ -1,4 +1,4 @@
-namespace MemSearch;
+namespace OmniHax;
 
 internal static class Privileges
 {

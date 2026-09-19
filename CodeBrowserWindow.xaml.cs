@@ -5,7 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Iced.Intel;
 
-namespace MemSearch;
+namespace OmniHax;
 
 public sealed class CodeRow
 {

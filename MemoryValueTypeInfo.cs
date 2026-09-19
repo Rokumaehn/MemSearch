@@ -1,7 +1,7 @@
 using System.Buffers.Binary;
 using System.Globalization;
 
-namespace MemSearch;
+namespace OmniHax;
 
 internal enum MemoryValueType
 {
@@ -174,6 +174,27 @@ internal static class MemoryValueTypeInfo
         MemoryValueType.Float => BinaryPrimitives.ReadSingleLittleEndian(data).ToString("R", Invariant),
         MemoryValueType.Double => BinaryPrimitives.ReadDoubleLittleEndian(data).ToString("R", Invariant),
         _ => "??"
+    };
+
+    /// <summary>
+    /// Compares two raw little-endian values (zero-extended to 64 bits) for the
+    /// given datatype, returning a negative value, zero or a positive value.
+    /// </summary>
+    public static int Compare(MemoryValueType type, ulong left, ulong right) => type switch
+    {
+        MemoryValueType.Byte => ((byte)left).CompareTo((byte)right),
+        MemoryValueType.SByte => ((sbyte)left).CompareTo((sbyte)right),
+        MemoryValueType.Word => ((ushort)left).CompareTo((ushort)right),
+        MemoryValueType.Int16 => ((short)left).CompareTo((short)right),
+        MemoryValueType.DWord => ((uint)left).CompareTo((uint)right),
+        MemoryValueType.Int32 => ((int)left).CompareTo((int)right),
+        MemoryValueType.QWord => left.CompareTo(right),
+        MemoryValueType.Int64 => ((long)left).CompareTo((long)right),
+        MemoryValueType.Float => BitConverter.UInt32BitsToSingle((uint)left)
+            .CompareTo(BitConverter.UInt32BitsToSingle((uint)right)),
+        MemoryValueType.Double => BitConverter.UInt64BitsToDouble(left)
+            .CompareTo(BitConverter.UInt64BitsToDouble(right)),
+        _ => left.CompareTo(right)
     };
 
     private static bool TryParseUnsigned(string text, ulong max, out ulong value, out string error)

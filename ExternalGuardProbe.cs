@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 
-namespace MemSearch;
+namespace OmniHax;
 
 /// <summary>
 /// Diagnostic probe that sets PAGE_GUARD on the watched address's page from outside
@@ -97,7 +97,7 @@ internal sealed class ExternalGuardProbe : IAccessTracker, IDisposable
         _monitor = new Thread(Monitor)
         {
             IsBackground = true,
-            Name = "MemSearch.ExternalGuardProbe"
+            Name = "OmniHax.ExternalGuardProbe"
         };
         _monitor.Start();
     }

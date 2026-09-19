@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace MemSearch;
+namespace OmniHax;
 
 internal static partial class NativeMethods
 {

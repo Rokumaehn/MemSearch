@@ -2,7 +2,7 @@ using System.IO;
 using Iced.Intel;
 using static Iced.Intel.AssemblerRegisters;
 
-namespace MemSearch;
+namespace OmniHax;
 
 /// <summary>
 /// Builds the x86-64 shellcode injected into the target:

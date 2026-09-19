@@ -4,7 +4,7 @@ Guidance for AI coding agents working in this repository.
 
 ## Project
 
-`MemSearch` — a WPF (`net10.0-windows`) Windows x64 memory scanner/editor and
+`Omni Hax` — a WPF (`net10.0-windows`) Windows x64 memory scanner/editor and
 access-tracking tool. Admin rights are requested via `app.manifest`. The only NuGet
 dependency is `Iced` (x86/x64 disassembler + assembler/encoder).
 
@@ -19,11 +19,11 @@ logic with a temporary console harness that references the source files directly
 (see "Testing" below) and by running the app.
 
 If `dotnet build` fails with `MSB3027/MSB3026` (file locked), the app is running —
-close `MemSearch.exe`. If the environment blocks the built binary
+close `OmniHax.exe`. If the environment blocks the built binary
 (`0x800711C7`, Smart App Control/WDAC), build to a temp output instead:
 
 ```powershell
-dotnet build -o "$env:TEMP\memsearch-verify"
+dotnet build -o "$env:TEMP\omnihax-verify"
 ```
 
 ## Architecture notes

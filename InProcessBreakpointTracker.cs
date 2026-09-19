@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace MemSearch;
+namespace OmniHax;
 
 /// <summary>
 /// Tracks writes to an address using a hardware breakpoint (DR0) whose exception is
@@ -152,8 +152,8 @@ internal sealed class InProcessBreakpointTracker : IAccessTracker, IDisposable
 
         _running = true;
         _cts = new CancellationTokenSource();
-        _pollThread = new Thread(() => PollLoop(_cts.Token)) { IsBackground = true, Name = "MemSearch.VehPoll" };
-        _armThread = new Thread(() => ArmLoop(_cts.Token)) { IsBackground = true, Name = "MemSearch.VehArm" };
+        _pollThread = new Thread(() => PollLoop(_cts.Token)) { IsBackground = true, Name = "OmniHax.VehPoll" };
+        _armThread = new Thread(() => ArmLoop(_cts.Token)) { IsBackground = true, Name = "OmniHax.VehArm" };
         _pollThread.Start();
         _armThread.Start();
 

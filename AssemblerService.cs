@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Reflection;
 using Iced.Intel;
 
-namespace MemSearch;
+namespace OmniHax;
 
 internal enum EditMode
 {

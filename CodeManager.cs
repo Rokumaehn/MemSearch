@@ -1,6 +1,6 @@
 using System.Collections.ObjectModel;
 
-namespace MemSearch;
+namespace OmniHax;
 
 /// <summary>
 /// Holds the list of code entries, applies/reverts script injections and

@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 
-namespace MemSearch;
+namespace OmniHax;
 
 internal readonly record struct MemoryRegion(ulong Base, ulong Size);
 
@@ -45,7 +45,7 @@ internal sealed class ProcessMemory : IDisposable
     /// Enumerates only committed, readable memory regions of the process,
     /// skipping free space, PAGE_NOACCESS and PAGE_GUARD pages.
     /// </summary>
-    public List<MemoryRegion> EnumerateRegions()
+    public List<MemoryRegion> EnumerateRegions(bool writableOnly = false)
     {
         var regions = new List<MemoryRegion>();
         ulong address = 0;
@@ -63,7 +63,8 @@ internal sealed class ProcessMemory : IDisposable
             if (regionSize == 0)
                 break;
 
-            if (mbi.State == NativeMethods.MEM_COMMIT && IsReadable(mbi.Protect))
+            if (mbi.State == NativeMethods.MEM_COMMIT && IsReadable(mbi.Protect) &&
+                (!writableOnly || IsWritable(mbi.Protect)))
                 regions.Add(new MemoryRegion(baseAddress, regionSize));
 
             ulong next = baseAddress + regionSize;
@@ -82,6 +83,13 @@ internal sealed class ProcessMemory : IDisposable
 
         uint baseProtect = protect & 0xFF;
         return baseProtect != 0 && baseProtect != NativeMethods.PAGE_NOACCESS;
+    }
+
+    private static bool IsWritable(uint protect)
+    {
+        uint baseProtect = protect & 0xFF;
+        return baseProtect is NativeMethods.PAGE_READWRITE or NativeMethods.PAGE_WRITECOPY
+            or NativeMethods.PAGE_EXECUTE_READWRITE or NativeMethods.PAGE_EXECUTE_WRITECOPY;
     }
 
     public bool ReadBytes(ulong address, byte[] buffer, int count, out int bytesRead)

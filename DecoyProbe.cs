@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 
-namespace MemSearch;
+namespace OmniHax;
 
 /// <summary>
 /// Diagnostic probe that allocates a fresh page in the target (never accessed by the
@@ -103,7 +103,7 @@ internal sealed class DecoyProbe : IAccessTracker, IDisposable
         _monitor = new Thread(Monitor)
         {
             IsBackground = true,
-            Name = "MemSearch.DecoyProbe"
+            Name = "OmniHax.DecoyProbe"
         };
         _monitor.Start();
     }

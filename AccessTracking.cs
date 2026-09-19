@@ -1,4 +1,4 @@
-namespace MemSearch;
+namespace OmniHax;
 
 internal readonly record struct DebugRegisters(ulong Dr0, ulong Dr1, ulong Dr2, ulong Dr3, ulong Dr7);
 

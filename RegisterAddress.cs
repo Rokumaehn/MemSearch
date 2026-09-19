@@ -1,6 +1,6 @@
 using Iced.Intel;
 
-namespace MemSearch;
+namespace OmniHax;
 
 /// <summary>
 /// Shared helpers for resolving a memory operand's effective address from a

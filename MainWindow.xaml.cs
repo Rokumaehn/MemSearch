@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -6,7 +6,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 
-namespace MemSearch;
+namespace OmniHax;
 
 public partial class MainWindow : Window
 {
@@ -14,6 +14,13 @@ public partial class MainWindow : Window
 
     private readonly ObservableCollection<ResultRow> _results = new();
     private readonly object _scanLock = new();
+
+    private enum SearchMode
+    {
+        None,
+        Direct,
+        Unknown
+    }
 
     private ProcessMemory? _memory;
     private MemoryScanner? _scanner;
@@ -24,6 +31,9 @@ public partial class MainWindow : Window
     private CancellationTokenSource? _cts;
     private bool _typeLocked;
     private bool _isScanning;
+    private SearchMode _mode;
+    private UnknownValueScanner? _unknown;
+    private MemoryValueType _activeType = MemoryValueType.DWord;
     private AccessMechanism _accessMechanism = AccessMechanism.InProcessVeh;
 
     public MainWindow()
@@ -38,6 +48,7 @@ public partial class MainWindow : Window
         TypeCombo.SelectedValue = MemoryValueType.DWord;
 
         UpdateAccessTypeChecks();
+        ApplySearchControls();
         StartFreezeTimer();
     }
 
@@ -129,23 +140,23 @@ public partial class MainWindow : Window
         }
 
         _results.Clear();
-        TypeCombo.IsEnabled = true;
-        SearchBox.IsEnabled = true;
-        SearchButton.IsEnabled = true;
+        _unknown = null;
+        _mode = SearchMode.None;
+        ApplySearchControls();
 
         StatusText.Text = _memory is null
             ? "Open a process to begin."
-            : "Ready. Choose a type, enter a value and press Search.";
+            : "Ready. Choose a type, then type a value or leave it empty for an unknown-value scan.";
     }
 
     private async Task StartScanAsync()
     {
-        if (_isScanning)
+        if (_isScanning || _mode == SearchMode.Unknown)
             return;
 
         if (_memory is null)
         {
-            MessageBox.Show(this, "Open a process first.", "MemSearch",
+            MessageBox.Show(this, "Open a process first.", "Omni Hax",
                 MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
@@ -153,10 +164,19 @@ public partial class MainWindow : Window
         if (TypeCombo.SelectedValue is not MemoryValueType type)
             return;
 
+        bool writableOnly = WritableOnlyCheck.IsChecked == true;
+        bool aligned = AlignedCheck.IsChecked == true;
+
         string searchText = SearchBox.Text;
         if (string.IsNullOrWhiteSpace(searchText))
         {
-            StatusText.Text = "Enter a value to search for.";
+            if (_mode == SearchMode.Direct)
+            {
+                StatusText.Text = "Enter a value to search for.";
+                return;
+            }
+
+            await StartUnknownScanAsync(type, writableOnly, aligned);
             return;
         }
 
@@ -164,14 +184,14 @@ public partial class MainWindow : Window
         lock (_scanLock)
         {
             if (!_typeLocked || _scanner is null)
-                _scanner = new MemoryScanner(_memory, type);
+                _scanner = new MemoryScanner(_memory, type, writableOnly, aligned);
             scanner = _scanner;
         }
 
+        _activeType = type;
         _isScanning = true;
         _cts = new CancellationTokenSource();
-        SearchButton.IsEnabled = false;
-        SearchBox.IsEnabled = false;
+        ApplySearchControls();
         ScanProgress.Visibility = Visibility.Visible;
         StatusText.Text = "Scanning...";
 
@@ -184,13 +204,9 @@ public partial class MainWindow : Window
 
             IReadOnlyList<ulong> results = await scanner.ScanAsync(searchText, progress, _cts.Token);
 
-            if (!_typeLocked)
-            {
-                _typeLocked = true;
-                TypeCombo.IsEnabled = false;
-            }
-
-            UpdateResults(results);
+            _typeLocked = true;
+            _mode = SearchMode.Direct;
+            UpdateResults(results, results.Count);
         }
         catch (FormatException ex)
         {
@@ -206,34 +222,158 @@ public partial class MainWindow : Window
         {
             _isScanning = false;
             ScanProgress.Visibility = Visibility.Collapsed;
-            SearchButton.IsEnabled = true;
-            SearchBox.IsEnabled = true;
+            ApplySearchControls();
             _cts?.Dispose();
             _cts = null;
         }
     }
 
-    private void UpdateResults(IReadOnlyList<ulong> results)
+    private async Task StartUnknownScanAsync(MemoryValueType type, bool writableOnly, bool aligned)
+    {
+        if (_memory is null)
+            return;
+
+        var scanner = new UnknownValueScanner(_memory, type, writableOnly, aligned);
+        _unknown = scanner;
+        _activeType = type;
+        _isScanning = true;
+        _cts = new CancellationTokenSource();
+        ApplySearchControls();
+        ScanProgress.Visibility = Visibility.Visible;
+        StatusText.Text = "Snapshotting memory...";
+
+        try
+        {
+            var progress = new Progress<ScanProgress>(p =>
+            {
+                StatusText.Text = $"Snapshotting... {p.RegionsDone}/{p.RegionsTotal} regions, {p.Found} candidate(s).";
+            });
+
+            await scanner.SnapshotAsync(progress, _cts.Token);
+
+            _typeLocked = true;
+            _mode = SearchMode.Unknown;
+            UpdateResults(scanner.Addresses(ResultThreshold + 1), scanner.Count);
+        }
+        catch (OperationCanceledException)
+        {
+            _unknown = null;
+            StatusText.Text = "Scan cancelled.";
+        }
+        finally
+        {
+            _isScanning = false;
+            ScanProgress.Visibility = Visibility.Collapsed;
+            ApplySearchControls();
+            _cts?.Dispose();
+            _cts = null;
+        }
+    }
+
+    private void LessButton_Click(object sender, RoutedEventArgs e) => _ = CompareUnknownAsync(UnknownComparison.Less);
+
+    private void GreaterButton_Click(object sender, RoutedEventArgs e) => _ = CompareUnknownAsync(UnknownComparison.Greater);
+
+    private void EqualButton_Click(object sender, RoutedEventArgs e) => _ = CompareUnknownAsync(UnknownComparison.Equal);
+
+    private async Task CompareUnknownAsync(UnknownComparison comparison)
+    {
+        if (_isScanning || _mode != SearchMode.Unknown || _unknown is null)
+            return;
+
+        UnknownValueScanner scanner = _unknown;
+        _isScanning = true;
+        _cts = new CancellationTokenSource();
+        ApplySearchControls();
+        ScanProgress.Visibility = Visibility.Visible;
+        StatusText.Text = "Comparing...";
+
+        try
+        {
+            var progress = new Progress<ScanProgress>(p =>
+            {
+                StatusText.Text = $"Comparing... {p.RegionsDone}/{p.RegionsTotal}, {p.Found} remaining.";
+            });
+
+            await scanner.CompareAsync(comparison, progress, _cts.Token);
+
+            UpdateResults(scanner.Addresses(ResultThreshold + 1), scanner.Count);
+        }
+        catch (OperationCanceledException)
+        {
+            StatusText.Text = "Scan cancelled.";
+        }
+        finally
+        {
+            _isScanning = false;
+            ScanProgress.Visibility = Visibility.Collapsed;
+            ApplySearchControls();
+            _cts?.Dispose();
+            _cts = null;
+        }
+    }
+
+    private void ApplySearchControls()
+    {
+        bool scanning = _isScanning;
+
+        switch (_mode)
+        {
+            case SearchMode.Direct:
+                TypeCombo.IsEnabled = false;
+                WritableOnlyCheck.IsEnabled = false;
+                AlignedCheck.IsEnabled = false;
+                SearchBox.IsEnabled = !scanning;
+                SearchButton.IsEnabled = !scanning;
+                SetUnknownButtonsEnabled(false);
+                break;
+
+            case SearchMode.Unknown:
+                TypeCombo.IsEnabled = false;
+                WritableOnlyCheck.IsEnabled = false;
+                AlignedCheck.IsEnabled = false;
+                SearchBox.IsEnabled = false;
+                SearchButton.IsEnabled = false;
+                SetUnknownButtonsEnabled(!scanning);
+                break;
+
+            default:
+                TypeCombo.IsEnabled = !scanning;
+                WritableOnlyCheck.IsEnabled = !scanning;
+                AlignedCheck.IsEnabled = !scanning;
+                SearchBox.IsEnabled = !scanning;
+                SearchButton.IsEnabled = !scanning;
+                SetUnknownButtonsEnabled(false);
+                break;
+        }
+    }
+
+    private void SetUnknownButtonsEnabled(bool enabled)
+    {
+        LessButton.IsEnabled = enabled;
+        GreaterButton.IsEnabled = enabled;
+        EqualButton.IsEnabled = enabled;
+    }
+
+    private void UpdateResults(IEnumerable<ulong> results, int total)
     {
         _results.Clear();
 
-        if (results.Count <= ResultThreshold)
+        if (total <= ResultThreshold)
         {
-            MemoryValueType type = _scanner?.ValueType ?? MemoryValueType.DWord;
-
             foreach (ulong address in results)
             {
-                var row = new ResultRow(address, ReadFormatted(type, address), WriteValue);
+                var row = new ResultRow(address, ReadFormatted(_activeType, address), WriteValue);
                 row.WriteFailed += message => MessageBox.Show(this, message, "Write Failed",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 _results.Add(row);
             }
 
-            StatusText.Text = $"{results.Count} address(es) found. Edit a value to write it to the process.";
+            StatusText.Text = $"{total} address(es) found. Edit a value to write it to the process.";
         }
         else
         {
-            StatusText.Text = $"{results.Count} address(es) found. Refine the search; the list appears at {ResultThreshold} or fewer.";
+            StatusText.Text = $"{total} address(es) found. Refine the search; the list appears at {ResultThreshold} or fewer.";
         }
     }
 
@@ -250,10 +390,10 @@ public partial class MainWindow : Window
 
     private (bool Ok, string Applied, string? Error) WriteValue(ulong address, string text)
     {
-        if (_memory is null || _scanner is null)
+        if (_memory is null)
             return (false, string.Empty, "No process is open.");
 
-        MemoryValueType type = _scanner.ValueType;
+        MemoryValueType type = _activeType;
         if (!MemoryValueTypeInfo.TryParse(type, text, out byte[] bytes, out _, out string error))
             return (false, string.Empty, error);
 
@@ -285,7 +425,7 @@ public partial class MainWindow : Window
         if (ResultsGrid.SelectedItem is ResultRow row)
             return row;
 
-        MessageBox.Show(this, "Select an address in the results list first.", "MemSearch",
+        MessageBox.Show(this, "Select an address in the results list first.", "Omni Hax",
             MessageBoxButton.OK, MessageBoxImage.Information);
         return null;
     }
@@ -482,7 +622,7 @@ public partial class MainWindow : Window
         if (!_memory.Is64BitProcess)
         {
             MessageBox.Show(this, "Access tracking is only supported for 64-bit target processes.",
-                "MemSearch", MessageBoxButton.OK, MessageBoxImage.Warning);
+                "Omni Hax", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 

@@ -1,7 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 
-namespace MemSearch;
+namespace OmniHax;
 
 public partial class ScriptEditorWindow : Window
 {

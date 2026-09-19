@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace MemSearch;
+namespace OmniHax;
 
 internal static partial class NativeMethods
 {
